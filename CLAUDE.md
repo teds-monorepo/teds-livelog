@@ -14,9 +14,14 @@ Dark theme, rounded cards, left sidebar nav with a collapse toggle.
 ## Commands
 
 ```bash
-pnpm dev          # viewer dev server, http://localhost:5174
-pnpm dev:server   # realtime server, http://localhost:8787
-pnpm build        # production build — static files to dist/
+pnpm dev
+pnpm dev:server
+pnpm build
+```
+
+`pnpm dev` serves the viewer on http://localhost:5174; `pnpm dev:server` runs
+the realtime server on http://localhost:8787; `pnpm build` writes production
+static files to `dist/`.
 ```
 
 There are no automated tests yet. If you add non-trivial logic (especially in

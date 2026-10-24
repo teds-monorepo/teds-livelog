@@ -36,11 +36,14 @@ committed: it is gitignored.
 ## Run it locally
 
 ```bash
-cd server     # or the folder you unzipped
+cd server
 npm install
-cp tokens.example.json tokens.json     # then edit the tokens
+cp tokens.example.json tokens.json
 LIVELOG_TOKENS_FILE=./tokens.json npm run dev
 ```
+
+Use `cd server` from the livelog repo, or whatever folder you unzipped into.
+Edit `tokens.json` after copying it.
 
 It listens on `http://localhost:8787`. `npm run dev` uses `node --watch`, so
 edits restart it.

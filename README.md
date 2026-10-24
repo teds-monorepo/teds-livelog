@@ -14,9 +14,14 @@ refresh.
 
 ```bash
 pnpm install
-pnpm dev            # viewer dev server, http://localhost:5174
-pnpm dev:server     # realtime server, http://localhost:8787
-pnpm build          # static files to dist/ (syncs server/ into public/server/ first)
+pnpm dev
+pnpm dev:server
+pnpm build
+```
+
+`pnpm dev` serves the viewer on http://localhost:5174; `pnpm dev:server` runs
+the realtime server on http://localhost:8787; `pnpm build` writes static files
+to `dist/` (syncing `server/` into `public/server/` first).
 ```
 
 Local end-to-end: run `dev:server` in one terminal and `dev` in another, set
