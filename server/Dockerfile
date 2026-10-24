@@ -15,5 +15,5 @@ RUN npm install --omit=dev
 COPY server.js ./
 COPY lib ./lib
 
-EXPOSE 8787
+EXPOSE 4504
 CMD ["node", "server.js"]

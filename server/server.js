@@ -27,7 +27,7 @@ import {
   validateLog,
 } from './lib/guard.js';
 
-const PORT = Number(process.env.PORT || 8787);
+const PORT = Number(process.env.PORT || 4504);
 const HOST = process.env.HOST || '0.0.0.0';
 const WS_PATH = process.env.LIVELOG_WS_PATH || '/ws';
 const LOG_PATH = process.env.LIVELOG_LOG_PATH || '/api/log';

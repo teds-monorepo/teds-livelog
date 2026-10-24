@@ -19,8 +19,8 @@ pnpm dev:server
 pnpm build
 ```
 
-`pnpm dev` serves the viewer on http://localhost:5174; `pnpm dev:server` runs
-the realtime server on http://localhost:8787; `pnpm build` writes production
+`pnpm dev` serves the viewer on http://localhost:4503; `pnpm dev:server` runs
+the realtime server on http://localhost:4504; `pnpm build` writes production
 static files to `dist/`.
 ```
 

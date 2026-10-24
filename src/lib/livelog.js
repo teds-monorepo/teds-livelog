@@ -267,7 +267,7 @@ export function resolveWsUrl(rest, explicit = '') {
   }
 }
 
-/** `localhost:8787` — what to show in the toolbar, without the scheme. */
+/** `localhost:4504` — what to show in the toolbar, without the scheme. */
 export function serverLabel(url) {
   try {
     return new URL(url).host;

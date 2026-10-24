@@ -283,11 +283,11 @@ export function LiveLogPage() {
                 <li>
                   <span className="font-mono text-text">npm install</span>, then{' '}
                   <span className="font-mono text-text">npm start</span> — it listens on{' '}
-                  <span className="font-mono text-text">http://localhost:8787</span>
+                  <span className="font-mono text-text">http://localhost:4504</span>
                 </li>
                 <li>
                   Come back here and set the server address to{' '}
-                  <span className="font-mono text-text">http://localhost:8787</span>
+                  <span className="font-mono text-text">http://localhost:4504</span>
                 </li>
               </ol>
 

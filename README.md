@@ -19,13 +19,13 @@ pnpm dev:server
 pnpm build
 ```
 
-`pnpm dev` serves the viewer on http://localhost:5174; `pnpm dev:server` runs
-the realtime server on http://localhost:8787; `pnpm build` writes static files
+`pnpm dev` serves the viewer on http://localhost:4503; `pnpm dev:server` runs
+the realtime server on http://localhost:4504; `pnpm build` writes static files
 to `dist/` (syncing `server/` into `public/server/` first).
 ```
 
 Local end-to-end: run `dev:server` in one terminal and `dev` in another, set
-`VITE_LIVELOG_URL=http://localhost:8787` in `.env.local`, then POST a log (see
+`VITE_LIVELOG_URL=http://localhost:4504` in `.env.local`, then POST a log (see
 `server/README.md`).
 
 ## Project structure

@@ -121,7 +121,7 @@ export default function ServerModal({
                 setDraftUrl(event.target.value);
                 setError('');
               }}
-              placeholder={defaultUrl || 'http://localhost:8787'}
+              placeholder={defaultUrl || 'http://localhost:4504'}
               className={FIELD}
             />
           </div>
@@ -196,7 +196,7 @@ export default function ServerModal({
               Copy <span className="font-mono text-text">tokens.example.json</span> to{' '}
               <span className="font-mono text-text">tokens.json</span> and set your own token
             </li>
-            <li>Run it — it listens on http://localhost:8787</li>
+            <li>Run it — it listens on http://localhost:4504</li>
           </ol>
 
           <Code text={RUN} onCopy={onCopy} />

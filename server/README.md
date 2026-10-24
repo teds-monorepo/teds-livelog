@@ -45,15 +45,15 @@ LIVELOG_TOKENS_FILE=./tokens.json npm run dev
 Use `cd server` from the livelog repo, or whatever folder you unzipped into.
 Edit `tokens.json` after copying it.
 
-It listens on `http://localhost:8787`. `npm run dev` uses `node --watch`, so
+It listens on `http://localhost:4504`. `npm run dev` uses `node --watch`, so
 edits restart it.
 
 Point the viewer at it either in `.env.local`, or at runtime from
 the **Server** dialog — the dialog needs no rebuild:
 
 ```
-VITE_LIVELOG_URL=http://localhost:8787
-VITE_LIVELOG_WS_URL=ws://localhost:8787/ws
+VITE_LIVELOG_URL=http://localhost:4504
+VITE_LIVELOG_WS_URL=ws://localhost:4504/ws
 VITE_LIVELOG_CHANNELS=default
 VITE_LIVELOG_DEFAULT_CHANNEL=default
 ```
@@ -61,7 +61,7 @@ VITE_LIVELOG_DEFAULT_CHANNEL=default
 Then send something:
 
 ```bash
-curl -i -X POST http://localhost:8787/api/log \
+curl -i -X POST http://localhost:4504/api/log \
   -H "Authorization: Bearer tk_live_replace_me_default" \
   -H "Content-Type: application/json" \
   -d '{"channel":"default","level":"info","source":"GameClient","message":"Player connected","data":{"playerId":123}}'
@@ -206,14 +206,14 @@ add the env vars. Railway keeps one replica by default; don't scale it.
 
 ```bash
 cd server && npm install --omit=dev
-LIVELOG_TOKENS_FILE=./tokens.json PORT=8787 node server.js   # under systemd/pm2
+LIVELOG_TOKENS_FILE=./tokens.json PORT=4504 node server.js   # under systemd/pm2
 ```
 
 Put Caddy in front for automatic TLS (`wss://` needs TLS termination):
 
 ```
 livelog.example.com {
-  reverse_proxy 127.0.0.1:8787
+  reverse_proxy 127.0.0.1:4504
 }
 ```
 
