@@ -84,6 +84,14 @@ server/
 
 ## Deployment
 
-The viewer build emits static files (`dist/`), deployable to **Cloudflare Pages**
-(output directory `dist`). SPA fallback is configured via `public/_redirects`.
-The server goes to Fly.io (see `server/README.md`).
+The viewer build emits static files (`dist/`), deployed to **Vercel** as a plain
+static site (`vercel.json`: framework `vite`, output `dist`, catch-all rewrite to
+`index.html` for React Router). `public/_redirects` is kept for Cloudflare
+Pages, which ignores `vercel.json`; Vercel ignores `_redirects` and uses the
+rewrite instead, so both hosts work from one build.
+
+The realtime server is **not** deployed anywhere by this repo — whoever runs the
+viewer downloads `livelog-server.zip` from the page and hosts it themselves
+(local, Fly.io, a VPS). Vercel cannot host it: the broker holds sockets and
+in-memory state in one process, while Vercel Functions cut WebSockets at the
+300 s max duration and do not pin reconnects to the same instance.

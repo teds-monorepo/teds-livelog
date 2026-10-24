@@ -254,6 +254,15 @@ export function LiveLogPage() {
                 app, because a static site can hold no socket open.
                 Run it somewhere, then point this page at it.
               </p>
+              <p className="mt-2 max-w-[680px] text-[12px] text-muted">
+                This page is served over HTTPS, so a server on{' '}
+                <span className="font-mono text-text">localhost</span> works but the browser may ask
+                for permission to reach your local network (Chrome 147+). A server on another
+                machine needs <span className="font-mono text-text">https</span>/
+                <span className="font-mono text-text">wss</span> — a plain{' '}
+                <span className="font-mono text-text">http://192.168…</span> address is blocked as
+                mixed content.
+              </p>
 
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 <button

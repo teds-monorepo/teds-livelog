@@ -5,7 +5,8 @@ them appear in the viewer in real time. Nothing is stored: logs live in the
 server's memory and in the open page, and both are gone on the next restart or
 refresh.
 
-- Viewer: Vite + React static site (`src/`), deployable to Cloudflare Pages
+- Viewer: Vite + React static site (`src/`), deployable to Vercel (static, no
+  server runtime); Cloudflare Pages still works
 - SDK: `public/livelog.js` (classic script) and `public/livelog.esm.js` (module)
 - Realtime server: `server/` — its own deployable, downloadable from the viewer
   itself, with its own [README](server/README.md) covering hosting and ops
