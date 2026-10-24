@@ -22,7 +22,6 @@ pnpm build
 `pnpm dev` serves the viewer on http://localhost:4503; `pnpm dev:server` runs
 the realtime server on http://localhost:4504; `pnpm build` writes production
 static files to `dist/`.
-```
 
 There are no automated tests yet. If you add non-trivial logic (especially in
 `lib/`), prefer writing it as a small pure function so it's easy to test later.
@@ -86,9 +85,8 @@ server/
 
 The viewer build emits static files (`dist/`), deployed to **Vercel** as a plain
 static site (`vercel.json`: framework `vite`, output `dist`, catch-all rewrite to
-`index.html` for React Router). `public/_redirects` is kept for Cloudflare
-Pages, which ignores `vercel.json`; Vercel ignores `_redirects` and uses the
-rewrite instead, so both hosts work from one build.
+`index.html` for React Router). Vercel checks the filesystem before applying the
+rewrite, so `assets/*`, `livelog.js` and `server/*` are still served as files.
 
 The realtime server is **not** deployed anywhere by this repo — whoever runs the
 viewer downloads `livelog-server.zip` from the page and hosts it themselves

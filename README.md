@@ -6,7 +6,7 @@ server's memory and in the open page, and both are gone on the next restart or
 refresh.
 
 - Viewer: Vite + React static site (`src/`), deployable to Vercel (static, no
-  server runtime); Cloudflare Pages still works
+  server runtime)
 - SDK: `public/livelog.js` (classic script) and `public/livelog.esm.js` (module)
 - Realtime server: `server/` — its own deployable, downloadable from the viewer
   itself, with its own [README](server/README.md) covering hosting and ops
@@ -23,7 +23,6 @@ pnpm build
 `pnpm dev` serves the viewer on http://localhost:4503; `pnpm dev:server` runs
 the realtime server on http://localhost:4504; `pnpm build` writes static files
 to `dist/` (syncing `server/` into `public/server/` first).
-```
 
 Local end-to-end: run `dev:server` in one terminal and `dev` in another, set
 `VITE_LIVELOG_URL=http://localhost:4504` in `.env.local`, then POST a log (see

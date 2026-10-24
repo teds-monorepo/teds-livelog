@@ -18,9 +18,6 @@ server/env
 # Never commit real tokens or local env here; the sync only copies the allowlist.
 public/server/
 
-# Wrangler local state
-.wrangler/
-
 # pnpm / npm
 pnpm-debug.log*
 
