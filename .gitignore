@@ -11,6 +11,8 @@ build/
 tokens.json
 # Server tokens live next to the server; never ship them.
 server/tokens.json
+# A local copy of server/env.example, hand-edited with real values.
+server/env
 
 # Generated at build time from server/ (see scripts/sync-server.mjs).
 # Never commit real tokens or local env here; the sync only copies the allowlist.
