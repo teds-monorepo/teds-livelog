@@ -67,13 +67,32 @@ curl -i -X POST http://localhost:4504/api/log \
   -d '{"channel":"default","level":"info","source":"GameClient","message":"Player connected","data":{"playerId":123}}'
 ```
 
-Or open `api.http` next to this file with the REST Client extension (VS Code) or
-the HTTP Client (JetBrains) and send any block from there. It covers health,
-channel listing, one request per log level, and the failure cases with the
-status each should return (401, 403, 400, 405, 404) — handy for checking a
-deployment or a new token without writing curl by hand.
+Or skip the shell entirely: the server serves a test sender at its own root.
+
+**Open http://localhost:4504 in a browser.** Type a token from `tokens.json`, pick
+a channel, and press `debug` / `info` / `warn` / `error` — each sends one log and
+prints the status and body it got back. There are also buttons for `GET /healthz`
+and `GET /api/channels`, and a free-form message + JSON `data` field for anything
+else. The token is kept in `sessionStorage` for that tab only; the page is served
+`no-store` and is the same file either way (`test.html`, also at `/test.html`).
+
+The page is local-only in spirit, not by policy: it carries no secret of its
+own, but it is served by whatever port the server is exposed on. If you bind the
+server to a public interface, remember that anyone who can reach that port can
+also reach this page (they still need a token to write).
+
+Prefer files over a browser? Open `api.http` next to this file with the REST
+Client extension (VS Code) or the HTTP Client (JetBrains) and send any block
+from there. It covers health, channel listing, one request per log level, and
+the failure cases with the status each should return (401, 403, 400, 405, 404).
 
 ## API
+
+### `GET /` (and `GET /test.html`)
+
+The built-in test sender — an HTML page, `no-store`, no secret in it. Read from
+`test.html` beside `server.js` on first request; if that file is missing the
+route answers 404 with a hint instead of failing at startup.
 
 ### `POST /api/log`
 

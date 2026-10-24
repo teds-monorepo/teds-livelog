@@ -19,6 +19,7 @@ const FILES = [
   'tokens.example.json',
   'README.md',
   'api.http',
+  'test.html',
   'lib/broker.js',
   'lib/guard.js',
 ];

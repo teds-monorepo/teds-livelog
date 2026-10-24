@@ -220,6 +220,7 @@ export const SERVER_FILES = [
   'env.example',
   'README.md',
   'api.http',
+  'test.html',
   'Dockerfile',
   'fly.toml',
 ];

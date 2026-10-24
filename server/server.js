@@ -33,6 +33,10 @@ const WS_PATH = process.env.LIVELOG_WS_PATH || '/ws';
 const LOG_PATH = process.env.LIVELOG_LOG_PATH || '/api/log';
 const CHANNELS_PATH = '/api/channels';
 const HEALTH_PATH = '/healthz';
+// The built-in sender, served from beside this file. `/` is the friendly entry
+// point; `/test.html` is kept so the address works when the server sits behind a
+// sub-path proxy and `/` belongs to something else.
+const TEST_PATHS = new Set(['/', '/test', '/test.html']);
 
 // Identifies this process so viewers can reset their dedupe watermark when the
 // server restarts and `seq` drops back to 1.
@@ -294,6 +298,38 @@ async function handleLog(req, res, cors) {
   return json(res, 202, { ok: true, seq: record.seq, timestamp: record.timestamp }, cors);
 }
 
+/**
+ * The sender page. The file is optional — someone who copies only `server.js`
+ * + `lib/` gets a 404 with a readable hint rather than a crash at startup — and
+ * it is read per request rather than cached, so editing `test.html` shows up on
+ * the next reload without restarting the process (`node --watch` only watches
+ * the modules the process imported).
+ */
+const TEST_PAGE_PATH = join(dirname(fileURLToPath(import.meta.url)), 'test.html');
+
+function sendTestPage(res) {
+  let page;
+  try {
+    page = readFileSync(TEST_PAGE_PATH);
+  } catch {
+    return json(res, 404, {
+      ok: false,
+      code: 'not_found',
+      message: 'test.html is not next to server.js — the built-in sender is unavailable.',
+    });
+  }
+
+  res.writeHead(200, {
+    'Content-Type': 'text/html; charset=utf-8',
+    'Content-Length': page.length,
+    // Never cached: it is a local debugging tool, and a stale copy after an
+    // update would be confusing. It also carries nothing sensitive itself —
+    // the token is typed in per tab and kept in sessionStorage.
+    'Cache-Control': 'no-store',
+  });
+  res.end(page);
+}
+
 const server = http.createServer(async (req, res) => {
   const cors = corsHeaders(req.headers.origin);
   const path = new URL(req.url, `http://${req.headers.host || 'localhost'}`).pathname;
@@ -327,6 +363,10 @@ const server = http.createServer(async (req, res) => {
       return json(res, 405, { ok: false, code: 'method_not_allowed', message: 'use POST' }, cors);
     }
     return handleLog(req, res, cors);
+  }
+
+  if (TEST_PATHS.has(path) && (req.method === 'GET' || req.method === 'HEAD')) {
+    return sendTestPage(res);
   }
 
   return json(res, 404, { ok: false, code: 'not_found' }, cors);
@@ -467,6 +507,7 @@ process.on('SIGINT', () => shutdown('SIGINT'));
 server.listen(PORT, HOST, () => {
   const channels = configuredChannels(tokens);
   console.log(`[livelog] listening on http://${HOST}:${PORT}`);
+  console.log(`[livelog] send test events in a browser: http://localhost:${PORT}/`);
   console.log(
     `[livelog] POST ${LOG_PATH} · WS ${WS_PATH} · GET ${CHANNELS_PATH} · GET ${HEALTH_PATH}`
   );
