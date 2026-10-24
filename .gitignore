@@ -1,0 +1,33 @@
+node_modules/
+dist/
+build/
+
+# Env & secrets — never commit real credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+tokens.json
+# Server tokens live next to the server; never ship them.
+server/tokens.json
+
+# Generated at build time from server/ (see scripts/sync-server.mjs).
+# Never commit real tokens or local env here; the sync only copies the allowlist.
+public/server/
+
+# Wrangler local state
+.wrangler/
+
+# pnpm / npm
+pnpm-debug.log*
+
+# TypeScript / Vite
+*.tsbuildinfo
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/

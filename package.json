@@ -1,0 +1,46 @@
+{
+  "name": "teds-livelog",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.14.0",
+  "engines": {
+    "node": ">=20.19.0",
+    "pnpm": ">=10.0.0"
+  },
+  "description": "Live Log viewer (Vite static) + realtime broadcast server. In-memory only — no database, no persistence.",
+  "scripts": {
+    "dev": "vite",
+    "dev:server": "node --watch server/server.js",
+    "build": "node scripts/sync-server.mjs && vite build",
+    "preview": "vite preview",
+    "start:server": "node server/server.js",
+    "lint": "node --check server/server.js && node --check server/lib/broker.js && node --check server/lib/guard.js",
+    "typecheck": "echo \"no typecheck (JS project)\" && exit 0",
+    "test": "echo \"no tests\" && exit 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "prettier": "^3.6.2",
+    "tailwindcss": "^3.4.4",
+    "vite": "^6.0.7"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  },
+  "prettier": {
+    "singleQuote": true,
+    "trailingComma": "es5",
+    "printWidth": 100
+  }
+}

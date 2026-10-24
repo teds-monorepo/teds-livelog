@@ -1,0 +1,7 @@
+{
+  "name": "livelog",
+  "compatibility_date": "2026-10-11",
+  "assets": {
+    "directory": "./dist"
+  }
+}

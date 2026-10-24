@@ -1,0 +1,21 @@
+{
+  "name": "livelog-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Realtime broadcast server for Live Log. In-memory only — no database, no persistence.",
+  "type": "module",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18.11"
+  },
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js",
+    "lint": "node --check server.js && node --check lib/broker.js && node --check lib/guard.js",
+    "typecheck": "echo \"no typecheck (JS project)\" && exit 0",
+    "test": "echo \"no tests\" && exit 0"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

@@ -1,0 +1,33 @@
+# Fly.io config for the Live Log realtime server.
+#
+# Change `app` to a globally unique name before deploying, and set the tokens:
+#   fly secrets set LIVELOG_TOKENS_FILE=/app/tokens.json
+#
+# auto_stop_machines = false and min_machines_running = 1 are both load-bearing:
+# a suspended machine drops every viewer socket AND loses every in-memory log,
+# and for this server that is the entire state.
+app = "livelog"
+primary_region = "sin"
+
+[build]
+
+[env]
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "10s"
+    method = "GET"
+    path = "/healthz"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

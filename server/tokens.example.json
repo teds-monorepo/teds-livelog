@@ -1,0 +1,14 @@
+{
+  "tokens": [
+    {
+      "token": "tk_live_replace_me_default",
+      "label": "default channel client",
+      "channels": ["default"]
+    },
+    {
+      "token": "tk_live_replace_me_other",
+      "label": "another project",
+      "channels": ["other-project"]
+    }
+  ]
+}
