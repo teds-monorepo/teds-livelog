@@ -67,6 +67,12 @@ curl -i -X POST http://localhost:4504/api/log \
   -d '{"channel":"default","level":"info","source":"GameClient","message":"Player connected","data":{"playerId":123}}'
 ```
 
+Or open `api.http` next to this file with the REST Client extension (VS Code) or
+the HTTP Client (JetBrains) and send any block from there. It covers health,
+channel listing, one request per log level, and the failure cases with the
+status each should return (401, 403, 400, 405, 404) — handy for checking a
+deployment or a new token without writing curl by hand.
+
 ## API
 
 ### `POST /api/log`

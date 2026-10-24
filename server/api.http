@@ -1,0 +1,207 @@
+### Live Log realtime server — manual requests
+#
+# Open this file with the REST Client extension (VS Code) or the HTTP Client
+# (JetBrains IDEs) and press "Send Request" on any block below. Start the server
+# first:
+#
+#   cd server
+#   npm install
+#   cp tokens.example.json tokens.json
+#   LIVELOG_TOKENS_FILE=./tokens.json npm run dev
+#
+# The token used here is the placeholder from tokens.example.json — it only
+# works once you have copied that file to tokens.json. Change @token below to
+# match whatever you put there.
+#
+# Open the viewer on the same channel first to see these arrive:
+#   http://localhost:4503 (VITE_LIVELOG_URL=http://localhost:4504)
+
+@base = http://localhost:4504
+@token = tk_live_replace_me_default
+@channel = default
+
+
+### Health — is the process up, and how many viewers are attached?
+# 200 { "ok": true, "uptime": 42, "channels": 1, "subscribers": 1 }
+GET {{base}}/healthz
+
+
+### Channels with recent traffic — the same list the viewer's sidebar shows
+# 200 { "channels": [{ "name": "default", "subscribers": 1, "recent": 3, "lastAt": 1791330135123 }] }
+GET {{base}}/api/channels
+
+
+### Send: debug
+# 202 { "ok": true, "seq": 1, "timestamp": 1791330135123 }
+POST {{base}}/api/log
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "channel": "{{channel}}",
+  "level": "debug",
+  "source": "ManualTest",
+  "message": "Loading configuration",
+  "data": { "version": "1.0.0" }
+}
+
+
+### Send: info
+POST {{base}}/api/log
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "channel": "{{channel}}",
+  "level": "info",
+  "source": "GameClient",
+  "message": "Player connected",
+  "data": { "playerId": 123, "roomId": "room_01" }
+}
+
+
+### Send: warn
+POST {{base}}/api/log
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "channel": "{{channel}}",
+  "level": "warn",
+  "source": "GameClient",
+  "message": "Missing configuration",
+  "data": { "key": "gameConfig" }
+}
+
+
+### Send: error
+POST {{base}}/api/log
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "channel": "{{channel}}",
+  "level": "error",
+  "source": "GameClient",
+  "message": "Connection failed",
+  "data": { "error": "Network timeout", "attempt": 3 }
+}
+
+
+### Send without `source` and `data` — both are optional
+POST {{base}}/api/log
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "channel": "{{channel}}",
+  "level": "info",
+  "message": "Bare minimum log"
+}
+
+
+### Send with a non-object `data` — any JSON value is accepted
+POST {{base}}/api/log
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "channel": "{{channel}}",
+  "level": "info",
+  "message": "String payload",
+  "data": "just a string"
+}
+
+
+### ---------------------------------------------------------------------------
+### Failure cases — these are expected to fail, and show what the viewer's
+### sender will get back. Each block names the status it should return.
+### ---------------------------------------------------------------------------
+
+### 401 — no Authorization header
+POST {{base}}/api/log
+Content-Type: application/json
+
+{
+  "channel": "{{channel}}",
+  "level": "info",
+  "message": "Missing token"
+}
+
+
+### 401 — unknown token
+POST {{base}}/api/log
+Authorization: Bearer tk_live_wrong
+Content-Type: application/json
+
+{
+  "channel": "{{channel}}",
+  "level": "info",
+  "message": "Bad token"
+}
+
+
+### 403 — valid token, channel it does not own
+# The example token list grants "default" and the other token "other-project",
+# so a single token writing elsewhere is forbidden rather than unauthorized.
+POST {{base}}/api/log
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "channel": "other-project",
+  "level": "info",
+  "message": "Wrong channel"
+}
+
+
+### 400 — unknown level
+POST {{base}}/api/log
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "channel": "{{channel}}",
+  "level": "trace",
+  "message": "Bad level"
+}
+
+
+### 400 — invalid channel name (only [a-zA-Z0-9._-], 1-64 chars)
+POST {{base}}/api/log
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "channel": "has spaces",
+  "level": "info",
+  "message": "Bad channel"
+}
+
+
+### 400 — empty message
+POST {{base}}/api/log
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "channel": "{{channel}}",
+  "level": "info",
+  "message": ""
+}
+
+
+### 400 — body is not valid JSON
+POST {{base}}/api/log
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+not json at all
+
+
+### 405 — GET on the ingest path (it only accepts POST)
+GET {{base}}/api/log
+
+
+### 404 — unknown path
+GET {{base}}/api/nope

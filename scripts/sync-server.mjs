@@ -18,6 +18,7 @@ const FILES = [
   'env.example',
   'tokens.example.json',
   'README.md',
+  'api.http',
   'lib/broker.js',
   'lib/guard.js',
 ];
