@@ -1,55 +1,41 @@
-# Live Log realtime server
+# Live Log — realtime server
 
-The persistent half of Live Log. It accepts logs over HTTP, holds
-the last few hundred per channel **in memory**, and fans them out to everyone
-watching that channel over WebSocket.
+Accepts logs over HTTP, keeps the newest ones per channel **in memory**, and
+pushes them to everyone watching that channel over WebSocket. The viewer is a
+static site, so it cannot hold a socket or share memory between viewers — this
+process is what makes the stream possible.
 
-Why it exists as a separate deployable: the viewer is a static site with no
-server runtime, so it can neither hold a socket open nor share memory between
-viewers — a log POSTed to one place could never reach a viewer connected
-elsewhere. Nothing here is a workaround for that; it is the correct shape for a
-long-lived broadcast.
+**No database, no disk.** Restarting loses every log; that is the design.
+**Run exactly one instance** — two processes each hold their own viewers and
+their own `seq`, so a log sent to one never reaches viewers on the other.
 
-**No database, no Redis, no disk.** Restarting the process loses every log. That
-is the requirement, not a limitation.
+---
 
-> Run **exactly one instance.** Two processes each keep their own viewers and
-> their own `seq` counter, so a log broadcast from one never reaches viewers on
-> the other. Scaling out would require a shared pub/sub, which would mean
-> introducing the persistence this design is built to avoid.
-
-Running the server on two machines is fine — that is simply two installations.
-Give each its own channels, and on the Live Log page add each channel with that
-machine's address so the page can switch between them (a channel carries the
-server it lives on). Nothing merges the two streams: one server per channel.
-
-## Getting it
-
-You don't have to clone the repo to get the server: open the **Live Log**
-viewer, click **Server**, and press **Download** to save
-`livelog-server.zip`. Or copy this folder as it is.
-
-Because of that download, **this folder is served publicly by the viewer** — treat
-anything placed here as world-readable. A real `tokens.json` must never be
-committed: it is gitignored.
-
-## Run it locally
+## Quick start
 
 ```bash
 cd server
 npm install
-cp tokens.example.json tokens.json
+cp tokens.example.json tokens.json     # then edit in your own tokens
 LIVELOG_TOKENS_FILE=./tokens.json npm run dev
 ```
 
-Use `cd server` from the livelog repo, or whatever folder you unzipped into.
-Edit `tokens.json` after copying it.
+It listens on `http://localhost:4504` and prints:
 
-It listens on `http://localhost:4504`. `npm run dev` uses `node --watch`, so
-edits restart it.
+```
+[livelog] send test events in a browser: http://localhost:4504/
+```
 
-Point the viewer at it either in `.env.local`, or at runtime from
-the **Server** dialog — the dialog needs no rebuild:
+**Open that address.** Paste a token from `tokens.json`, and press one of the
+`debug` / `info` / `warn` / `error` buttons. Each sends a sample log and shows
+the response inline; the message and JSON `data` fields let you send anything
+else. No token? Send anyway to see the 401.
+
+## Connect the viewer
+
+The viewer is a separate static app. Point it at this server either at build
+time (`.env.local`) or, more conveniently, at runtime through its **Server**
+dialog — that needs no rebuild:
 
 ```
 VITE_LIVELOG_URL=http://localhost:4504
@@ -58,41 +44,29 @@ VITE_LIVELOG_CHANNELS=default
 VITE_LIVELOG_DEFAULT_CHANNEL=default
 ```
 
-Then send something:
+Both sides must be on the same channel, or the logs land somewhere you are not
+looking. Restarting the server drops the backlog, and the viewer notices the new
+`instance` id and clears its own copy.
 
-```bash
-curl -i -X POST http://localhost:4504/api/log \
-  -H "Authorization: Bearer tk_live_replace_me_default" \
-  -H "Content-Type: application/json" \
-  -d '{"channel":"default","level":"info","source":"GameClient","message":"Player connected","data":{"playerId":123}}'
+## Tokens
+
+`tokens.json` holds one entry per project; each entry lists the channels it may
+write to. Only sending needs a token — watching is open.
+
+```json
+{ "tokens": [{ "token": "tk_live_...", "label": "default client", "channels": ["default"] }] }
 ```
 
-Or skip the shell entirely: the server serves a test sender at its own root.
+Generate a value worth using:
 
-**Open http://localhost:4504 in a browser.** Type a token from `tokens.json`, pick
-a channel, and press `debug` / `info` / `warn` / `error` — each sends one log and
-prints the status and body it got back. There are also buttons for `GET /healthz`
-and `GET /api/channels`, and a free-form message + JSON `data` field for anything
-else. The token is kept in `sessionStorage` for that tab only; the page is served
-`no-store` and is the same file either way (`test.html`, also at `/test.html`).
+```bash
+node -e "console.log('tk_live_' + require('crypto').randomBytes(24).toString('base64url'))"
+```
 
-The page is local-only in spirit, not by policy: it carries no secret of its
-own, but it is served by whatever port the server is exposed on. If you bind the
-server to a public interface, remember that anyone who can reach that port can
-also reach this page (they still need a token to write).
-
-Prefer files over a browser? Open `api.http` next to this file with the REST
-Client extension (VS Code) or the HTTP Client (JetBrains) and send any block
-from there. It covers health, channel listing, one request per log level, and
-the failure cases with the status each should return (401, 403, 400, 405, 404).
+Add an entry to create a token, remove it and restart to revoke. See
+`env.example` for every option; they are all optional.
 
 ## API
-
-### `GET /` (and `GET /test.html`)
-
-The built-in test sender — an HTML page, `no-store`, no secret in it. Read from
-`test.html` beside `server.js` on first request; if that file is missing the
-route answers 404 with a hint instead of failing at startup.
 
 ### `POST /api/log`
 
@@ -109,9 +83,12 @@ Content-Type: application/json
 429 rate limited               503 channel capacity reached
 ```
 
+`level` is one of `debug`, `info`, `warn`, `error`. `source` and `data` are
+optional; `data` may be any JSON value.
+
 ### `GET /api/channels`
 
-Channels with recent traffic, for the page's channel list:
+Channels with recent traffic — what the viewer lists in its sidebar.
 
 ```json
 { "channels": [{ "name": "default", "subscribers": 2, "recent": 184, "lastAt": 1791330135123 }] }
@@ -119,14 +96,14 @@ Channels with recent traffic, for the page's channel list:
 
 ### `GET /healthz`
 
-`{ "ok": true, "uptime": 3610, "channels": 2, "subscribers": 3 }` — used as the
-Fly health check.
+`{ "ok": true, "uptime": 3610, "channels": 2, "subscribers": 3 }` — use it as a
+deploy health check.
 
 ### `WS /ws`
 
 ```
 client → { "type": "subscribe", "channel": "default" }
-         { "type": "unsubscribe" }        // leave the current channel
+         { "type": "unsubscribe" }
          { "type": "ping" }
 
 server → { "type": "ready", "channel": "default", "instance": "<uuid>" }
@@ -136,13 +113,16 @@ server → { "type": "ready", "channel": "default", "instance": "<uuid>" }
          { "type": "pong" }
 ```
 
-The backlog is sent in response to `subscribe` (not on connect, since the
-channel isn't known until then) and always before any live log can interleave
-on that socket. Every log carries `channel`, `seq` and a server-assigned
-`timestamp`, so a viewer can ignore what it has already seen and can't be
-reordered by a client's clock.
+The backlog arrives after `subscribe` (the channel is unknown before that) and
+always before any live log, so a viewer can dedupe by `seq` and never reorder.
 
-## Limits and abuse protection
+### `GET /` (also `/test.html`)
+
+The built-in test sender described above. Read from `test.html` beside
+`server.js` on each request; if that file is missing the route answers 404
+rather than failing at startup. It carries no secret — the token is typed in.
+
+## Limits
 
 | Guard                    | Default                   | Env                                                         |
 | ------------------------ | ------------------------- | ----------------------------------------------------------- |
@@ -156,103 +136,63 @@ reordered by a client's clock.
 | Viewers per channel      | 100                       | `LIVELOG_MAX_SUBSCRIBERS`                                   |
 | Viewer sockets           | 500 total, 20 per IP      | `LIVELOG_MAX_CONNECTIONS`, `LIVELOG_MAX_CONNECTIONS_PER_IP` |
 
-Also enforced: the request body is refused as it streams past its cap rather
-than after being buffered, client WebSocket frames are capped at the protocol
-layer (`maxPayload`), a viewer that stops reading its socket is dropped rather
-than allowed to queue frames in the process, and tokens are compared as sha256
-digests so a guess leaks nothing through timing or length.
-
-Channel names are effectively public (reads are open, and `/api/channels` lists
-active ones), so use an unguessable name for anything sensitive.
-
-## Tokens
-
-Copy `tokens.example.json` to `tokens.json` — never commit `tokens.json` — and
-list one entry per project:
-
-```json
-{ "tokens": [{ "token": "tk_live_...", "label": "default client", "channels": ["default"] }] }
-```
-
-Generate a token with something random, e.g.:
-
-```bash
-node -e "console.log('tk_live_' + require('crypto').randomBytes(24).toString('base64url'))"
-```
-
-**Create** a token by adding an entry; **revoke** one by removing it and
-restarting (`fly apps restart`, or `fly secrets set` again). Restarting costs
-nothing but the current logs, which are meant to be lost anyway.
+Bodies are refused as they stream past the cap rather than after buffering, and
+tokens are compared as sha256 digests. Channel names are effectively public, so
+use an unguessable one for anything sensitive.
 
 ## Deploy
 
 ### Fly.io (recommended)
 
-WebSockets work through Fly's proxy with no extra config, and the machine can be
-pinned so it never sleeps.
+WebSockets pass through Fly's proxy unchanged, and one machine can be pinned so
+it never sleeps.
 
 ```bash
 cd server
 fly launch --no-deploy          # name it something unique, keep the Dockerfile
-fly secrets set LIVELOG_TOKENS_FILE=/app/tokens.json
 fly secrets set LIVELOG_ALLOWED_ORIGINS=https://livelog.example.com
-fly deploy
-```
-
-`tokens.json` isn't in the image (the Dockerfile copies only `server.js` and
-`lib/`), so mount it as a
-secret file, or pass the whole config inline instead:
-
-```bash
 fly secrets set LIVELOG_TOKENS='{"tokens":[{"token":"tk_live_...","label":"default","channels":["default"]}]}'
+fly deploy
+fly scale count 1               # exactly one instance, no autostop
 ```
 
-Then `fly certs add livelog.example.com` for a TLS domain, so the page can use
-`wss://`. Confirm one machine and no autostop:
+`tokens.json` is not in the image (the Dockerfile copies only `server.js` and
+`lib/`), so pass the config inline as above or mount it as a secret file. Add a
+TLS domain with `fly certs add livelog.example.com` so the page can use `wss://`.
 
-```bash
-fly scale count 1
-fly status                      # min_machines_running = 1, auto_stop = false
-```
+### Other hosts
 
-### Render
+- **Render** — Web Service, root directory `server`, build `npm install`, start
+  `npm start`, health check `/healthz`. Use a **paid** instance: the free plan
+  spins down when idle and drops every viewer and log.
+- **Railway** — root directory `server`, add the env vars, keep one replica.
+- **Any VPS** — `npm install --omit=dev`, then run under systemd/pm2 with
+  `LIVELOG_TOKENS_FILE=./tokens.json PORT=4504 node server.js`. Put Caddy in
+  front for TLS; it forwards the WebSocket upgrade and sets `x-forwarded-for`,
+  which `LIVELOG_TRUST_PROXY` (on by default) expects:
 
-Create a Web Service from this repo with root directory `server`,
-build `npm install`, start `npm start`, health check `/healthz`. Use a **paid**
-instance: the free plan spins down when idle, which drops every viewer and every
-log.
-
-### Railway
-
-New project → deploy from repo → set the root directory to `server` →
-add the env vars. Railway keeps one replica by default; don't scale it.
-
-### Any VPS
-
-```bash
-cd server && npm install --omit=dev
-LIVELOG_TOKENS_FILE=./tokens.json PORT=4504 node server.js   # under systemd/pm2
-```
-
-Put Caddy in front for automatic TLS (`wss://` needs TLS termination):
-
-```
-livelog.example.com {
-  reverse_proxy 127.0.0.1:4504
-}
-```
-
-Caddy passes the WebSocket upgrade through by default; `x-forwarded-for` is set
-by it, which is what `LIVELOG_TRUST_PROXY` (on by default) expects.
+  ```
+  livelog.example.com {
+    reverse_proxy 127.0.0.1:4504
+  }
+  ```
 
 ### After deploying
 
-Set the viewer's env vars to the new origin and redeploy (they're inlined at
-build time):
+Set the viewer's build-time vars to the new origin and redeploy — they are
+inlined at build time:
 
 ```
 VITE_LIVELOG_URL=https://livelog.example.com
 VITE_LIVELOG_WS_URL=wss://livelog.example.com/ws
 ```
 
-`ws://` will be blocked as mixed content on an HTTPS page, so it must be `wss://`.
+It must be `https`/`wss`: an HTTPS page blocks a plain `ws://` connection as
+mixed content.
+
+## Getting a copy
+
+The viewer's **Server** dialog offers `livelog-server.zip` with the files needed
+to run this folder elsewhere — no clone required. Because of that, **everything
+in this folder is world-readable**, so a real `tokens.json` must never be
+committed (it is gitignored).

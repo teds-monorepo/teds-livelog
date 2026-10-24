@@ -27,15 +27,10 @@
         padding: 32px 20px 60px;
         background: var(--bg);
         color: var(--text);
-        font:
-          13px/1.5 ui-sans-serif,
-          system-ui,
-          -apple-system,
-          "Segoe UI",
-          sans-serif;
+        font: 13px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
       }
       main {
-        max-width: 760px;
+        max-width: 720px;
         margin: 0 auto;
       }
       h1 {
@@ -44,7 +39,7 @@
         font-weight: 600;
       }
       p.sub {
-        margin: 0 0 24px;
+        margin: 0 0 22px;
         color: var(--muted);
         font-size: 12.5px;
       }
@@ -72,8 +67,7 @@
         color: var(--muted);
       }
       input,
-      textarea,
-      select {
+      textarea {
         width: 100%;
         border: 1px solid var(--border);
         border-radius: 9px;
@@ -90,7 +84,7 @@
       }
       textarea {
         resize: vertical;
-        min-height: 64px;
+        min-height: 62px;
       }
       .row {
         display: flex;
@@ -104,6 +98,9 @@
       .row > div.tight {
         flex: 0 0 110px;
       }
+      .field {
+        margin-bottom: 12px;
+      }
       button {
         border: 1px solid var(--border);
         border-radius: 9px;
@@ -114,12 +111,8 @@
         font-family: inherit;
         cursor: pointer;
       }
-      button:hover:not(:disabled) {
+      button:hover {
         border-color: var(--accent);
-      }
-      button:disabled {
-        opacity: 0.55;
-        cursor: default;
       }
       button.primary {
         background: var(--accent);
@@ -146,6 +139,8 @@
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
+      }
+      .buttons.spaced {
         margin-bottom: 14px;
       }
       .hint {
@@ -155,21 +150,16 @@
       }
       #out {
         margin: 0;
-        max-height: 340px;
+        max-height: 320px;
         overflow: auto;
-        white-space: pre-wrap;
-        word-break: break-word;
-        font:
-          12px/1.55 ui-monospace,
-          SFMono-Regular,
-          Menlo,
-          monospace;
+        font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
       }
       .line {
         display: block;
         padding: 3px 0;
         border-bottom: 1px solid rgba(37, 43, 69, 0.6);
         white-space: pre-wrap;
+        word-break: break-word;
       }
       .line:last-child {
         border-bottom: 0;
@@ -180,18 +170,13 @@
       .bad {
         color: var(--red);
       }
-      .dim {
-        color: var(--muted);
-      }
       .empty {
         color: var(--muted);
         font-style: italic;
       }
       code {
         font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      }
-      a {
-        color: var(--accent);
+        color: var(--text);
       }
     </style>
   </head>
@@ -199,12 +184,12 @@
     <main>
       <h1>Live Log — test sender</h1>
       <p class="sub">
-        Posts to <code>/api/log</code> on this server. Use a write token from
-        <code>tokens.json</code>. Nothing here is stored: the token is kept in this tab only.
+        Sends to <code>/api/log</code> on this server. Paste a write token from
+        <code>tokens.json</code>. Watch it arrive in the viewer, on the same channel.
       </p>
 
       <section>
-        <h2>Connection</h2>
+        <h2>Server &amp; token</h2>
         <div class="row">
           <div>
             <label for="token">Token</label>
@@ -212,40 +197,37 @@
           </div>
           <div class="tight">
             <label for="channel">Channel</label>
-            <input id="channel" list="channels" value="default" spellcheck="false" />
-            <datalist id="channels"></datalist>
+            <input id="channel" value="default" spellcheck="false" />
           </div>
         </div>
-        <div class="buttons" style="margin-bottom: 0">
-          <button type="button" id="ping">GET /healthz</button>
-          <button type="button" id="refresh">GET /api/channels</button>
-          <span class="dim" id="status" style="align-self: center; font-size: 12px"></span>
-        </div>
+        <p class="hint">
+          Leave the token empty to send without one and see the 401 the server returns.
+        </p>
       </section>
 
       <section>
         <h2>Send an event</h2>
-        <div class="buttons">
+        <div class="buttons spaced">
           <button type="button" class="debug" data-level="debug">debug</button>
           <button type="button" class="info" data-level="info">info</button>
           <button type="button" class="warn" data-level="warn">warn</button>
           <button type="button" class="error" data-level="error">error</button>
         </div>
-        <div style="margin-bottom: 12px">
+        <div class="field">
           <label for="message">Message</label>
           <input id="message" value="Hello from the test page" spellcheck="false" />
         </div>
-        <div style="margin-bottom: 12px">
+        <div class="field">
           <label for="data">Data (JSON, optional)</label>
           <textarea id="data" spellcheck="false">{ "playerId": 123 }</textarea>
         </div>
-        <div class="buttons" style="margin-bottom: 0">
+        <div class="buttons">
           <button type="button" class="primary" id="send">Send</button>
           <button type="button" id="clear">Clear output</button>
         </div>
         <p class="hint">
-          The four buttons send a preset message at that level. <strong>Send</strong> uses the
-          fields above with the currently selected level.
+          A level button sends its own preset sample. <strong>Send</strong> uses the fields above
+          at the level of the last button pressed.
         </p>
       </section>
 
@@ -256,37 +238,19 @@
     </main>
 
     <script>
-      // Level presets: the message and data each button fills in before sending,
-      // so a click shows exactly what went over the wire.
+      // Clicking a level button inserts its sample into the form and sends it, so
+      // the fields always show the exact payload that went over the wire.
       const PRESETS = {
         debug: { message: 'Loading configuration', data: { version: '1.0.0' } },
         info: { message: 'Player connected', data: { playerId: 123 } },
         warn: { message: 'Missing configuration', data: { key: 'gameConfig' } },
         error: { message: 'Connection failed', data: { error: 'Network timeout' } },
       };
-      const STORE = 'livelog.test';
 
       const $ = (id) => document.getElementById(id);
       const out = $('out');
       let level = 'info';
       let wrote = false;
-
-      function restore() {
-        try {
-          const saved = JSON.parse(sessionStorage.getItem(STORE) || '{}');
-          if (saved.token) $('token').value = saved.token;
-          if (saved.channel) $('channel').value = saved.channel;
-        } catch {}
-      }
-
-      function remember() {
-        try {
-          sessionStorage.setItem(
-            STORE,
-            JSON.stringify({ token: $('token').value, channel: $('channel').value })
-          );
-        } catch {}
-      }
 
       function print(text, tone) {
         if (!wrote) {
@@ -300,10 +264,6 @@
         out.scrollTop = out.scrollHeight;
       }
 
-      function stamp() {
-        return new Date().toLocaleTimeString();
-      }
-
       function chooseLevel(next) {
         level = next;
         for (const button of document.querySelectorAll('[data-level]')) {
@@ -313,114 +273,54 @@
         }
       }
 
-      async function send(preset) {
-        const message = preset ? PRESETS[level].message : $('message').value;
-        const rawData = preset ? JSON.stringify(PRESETS[level].data, null, 2) : $('data').value;
-        if (!message) return print('Not sent: message is empty', 'bad');
+      function fail(reason) {
+        print(`${new Date().toLocaleTimeString()}  not sent — ${reason}`, 'bad');
+      }
+
+      async function send(usePreset) {
+        if (usePreset) {
+          $('message').value = PRESETS[level].message;
+          $('data').value = JSON.stringify(PRESETS[level].data, null, 2);
+        }
+
+        const message = $('message').value;
+        if (!message) return fail('message is empty');
 
         const body = { channel: $('channel').value.trim(), level, message };
-        if (rawData.trim()) {
+        const rawData = $('data').value.trim();
+        if (rawData) {
           try {
             body.data = JSON.parse(rawData);
           } catch (error) {
-            return print('Not sent: data is not valid JSON — ' + error.message, 'bad');
+            return fail('data is not valid JSON — ' + error.message);
           }
         }
 
-        if (preset) {
-          $('message').value = message;
-          $('data').value = rawData;
-        }
-        remember();
+        const token = $('token').value.trim();
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers.Authorization = 'Bearer ' + token;
 
-        if (!$('token').value.trim()) {
-          const headers = { 'Content-Type': 'application/json' };
-          print(
-            `${stamp()}  ${level.toUpperCase()}  (no token set — expecting 401)\n` +
-              JSON.stringify(body),
-            'dim'
-          );
-          const response = await fetch('/api/log', {
+        let response;
+        try {
+          response = await fetch('/api/log', {
             method: 'POST',
             headers,
             body: JSON.stringify(body),
           });
-          return report(response);
+        } catch (error) {
+          return fail('could not reach the server — ' + error.message);
         }
 
-        const response = await fetch('/api/log', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: 'Bearer ' + $('token').value.trim(),
-          },
-          body: JSON.stringify(body),
-        });
-        report(response);
-      }
-
-      async function report(response) {
         let text;
         try {
           text = JSON.stringify(await response.json());
         } catch {
           text = '(no JSON body)';
         }
-        const good = response.ok;
-        print(`${stamp()}  ${response.status} ${response.statusText}  ${text}`, good ? 'ok' : 'bad');
-        refreshStatus();
-      }
-
-      async function getJson(path, label) {
-        try {
-          const response = await fetch(path, { cache: 'no-store' });
-          const text = JSON.stringify(await response.json());
-          print(`${stamp()}  GET ${label}  ${response.status}  ${text}`, response.ok ? 'ok' : 'bad');
-          return response.ok ? JSON.parse(text) : null;
-        } catch (error) {
-          print(`${stamp()}  GET ${label}  failed — ${error.message}`, 'bad');
-          return null;
-        }
-      }
-
-      async function refreshStatus() {
-        try {
-          const response = await fetch('/healthz', { cache: 'no-store' });
-          const body = await response.json();
-          $('status').textContent =
-            `up ${body.uptime}s · ${body.channels} channel(s) · ${body.subscribers} viewer(s)`;
-        } catch {
-          $('status').textContent = 'server unreachable';
-        }
-      }
-
-      /**
-       * Fills the channel datalist. Silent by default: on load it would
-       * otherwise print a line before anything has been sent, which reads like
-       * a result. The explicit refresh button passes `show` to log it.
-       */
-      async function refreshChannels(show) {
-        try {
-          const response = await fetch('/api/channels', { cache: 'no-store' });
-          const text = await response.text();
-          if (show) {
-            print(
-              `${stamp()}  GET /api/channels  ${response.status}  ${text}`,
-              response.ok ? 'ok' : 'bad'
-            );
-          }
-          if (!response.ok) return;
-          const payload = JSON.parse(text);
-          const list = $('channels');
-          list.textContent = '';
-          for (const entry of payload.channels || []) {
-            const option = document.createElement('option');
-            option.value = entry.name;
-            list.appendChild(option);
-          }
-        } catch (error) {
-          if (show) print(`${stamp()}  GET /api/channels  failed — ${error.message}`, 'bad');
-        }
+        print(
+          `${new Date().toLocaleTimeString()}  ${response.status} ${response.statusText}  ${text}`,
+          response.ok ? 'ok' : 'bad'
+        );
       }
 
       for (const button of document.querySelectorAll('[data-level]')) {
@@ -430,31 +330,15 @@
         });
       }
       $('send').addEventListener('click', () => send(false));
-      $('ping').addEventListener('click', async () => {
-        await getJson('/healthz', '/healthz');
-        refreshStatus();
-      });
-      $('refresh').addEventListener('click', () => refreshChannels(true));
       $('clear').addEventListener('click', () => {
         out.innerHTML = '<span class="empty">Nothing sent yet.</span>';
         wrote = false;
       });
-      for (const field of [$('token'), $('channel')]) {
-        field.addEventListener('change', remember);
-      }
       $('message').addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') {
-          event.preventDefault();
-          send(false);
-        }
+        if (event.key === 'Enter') send(false);
       });
 
-      restore();
       chooseLevel('info');
-      // Health on load proves the page is talking to the right process; the
-      // channel list fills the datalist without printing a second log line.
-      refreshStatus();
-      refreshChannels(false);
     </script>
   </body>
 </html>

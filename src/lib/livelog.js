@@ -219,7 +219,6 @@ export const SERVER_FILES = [
   'tokens.example.json',
   'env.example',
   'README.md',
-  'api.http',
   'test.html',
   'Dockerfile',
   'fly.toml',

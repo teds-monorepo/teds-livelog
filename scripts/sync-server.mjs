@@ -2,7 +2,7 @@
 // so the viewer can download them as a zip. Only the explicit allowlist below
 // is copied — tokens.json, .env, node_modules never leave server/.
 // Run automatically by the build script.
-import { copyFileSync, mkdirSync } from 'node:fs';
+import { copyFileSync, mkdirSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -18,11 +18,14 @@ const FILES = [
   'env.example',
   'tokens.example.json',
   'README.md',
-  'api.http',
   'test.html',
   'lib/broker.js',
   'lib/guard.js',
 ];
+
+// Wiped first: a file dropped from the allowlist would otherwise survive in the
+// output folder from an earlier build and still ship in the download.
+rmSync(dest, { recursive: true, force: true });
 
 for (const file of FILES) {
   mkdirSync(join(dest, dirname(file)), { recursive: true });
