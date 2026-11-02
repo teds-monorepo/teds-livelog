@@ -22,7 +22,9 @@ pnpm build
 
 `pnpm dev` serves the viewer on http://localhost:4503; `pnpm dev:server` runs
 the realtime server on http://localhost:4504; `pnpm build` writes static files
-to `dist/` (syncing `server/` into `public/server/` first).
+to `dist/` (syncing `server/` into `public/server/` first). `ws` is a
+devDependency here so `pnpm dev:server` runs right after `pnpm install`; the
+downloadable build ships its own `server/package.json`.
 
 Local end-to-end: run `dev:server` in one terminal and `dev` in another, set
 `VITE_LIVELOG_URL=http://localhost:4504` in `.env.local`, then POST a log (see

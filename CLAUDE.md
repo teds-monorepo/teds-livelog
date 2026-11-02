@@ -9,7 +9,7 @@ any project (via the standalone SDK in `public/`) and watch them appear in the
 viewer in real time. React 18, Vite, Tailwind CSS. Nothing is stored: logs live
 in the realtime server's memory and in the open page.
 
-Dark theme, rounded cards, left sidebar nav with a collapse toggle.
+Dark theme, rounded cards, a pinned sub-sidebar on the left.
 
 ## Commands
 
@@ -21,7 +21,9 @@ pnpm build
 
 `pnpm dev` serves the viewer on http://localhost:4503; `pnpm dev:server` runs
 the realtime server on http://localhost:4504; `pnpm build` writes production
-static files to `dist/`.
+static files to `dist/`. The server imports `ws`, which is a devDependency of
+this package (not of `server/package.json` alone) so `pnpm dev:server` works
+straight after `pnpm install`.
 
 There are no automated tests yet. If you add non-trivial logic (especially in
 `lib/`), prefer writing it as a small pure function so it's easy to test later.
